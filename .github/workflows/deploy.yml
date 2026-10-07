@@ -1,0 +1,33 @@
+name: Deploy Zytho app
+
+on:
+  push:
+    branches:
+      - main
+
+# Annule les déploiements précédents sur la même branche/environnement
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-prod:
+    runs-on: [self-hosted, linux]
+    environment: mainEnv
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Docker and npm installation
+        run: command -v docker npm
+
+      - name: Setup .env file
+        run: echo "${{ secrets.ENV }}" > .env
+
+      - name: Install NPM packages if necessary
+        run: npm install
+
+      - name: Build SvelteKit app
+        run: npm run build
+
+      - name: Deploy Production
+        run: docker compose -f base.compose.yml -f prod.compose.yml up -d --build --force-recreate

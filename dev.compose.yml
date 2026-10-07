@@ -1,0 +1,23 @@
+services:
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  zytho:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    env_file: .env
+    depends_on:
+      - db
+    restart: on-failure
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          initial_sync: true
