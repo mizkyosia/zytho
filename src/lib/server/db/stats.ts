@@ -1,4 +1,4 @@
-import { eq, sql, sum } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from ".";
 import { beer, delivery, deliveryLine } from "./schema";
 
