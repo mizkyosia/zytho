@@ -3,6 +3,8 @@ services:
     image: postgres
     restart: always
     container_name: db
+    networks:
+      - zytho
     ports:
       - 5432:5432
     environment:
@@ -14,3 +16,6 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  zytho:
