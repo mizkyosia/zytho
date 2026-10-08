@@ -8,7 +8,6 @@
         renderSnippet,
     } from "@tanstack/svelte-table";
     import { addZythoLine, editZythoLine } from "../../remote/zytho.remote.js";
-    import { allBeers } from "../../remote/beer.remote.js";
     import Combobox from "#lib/components/ui/combobox.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
     import DeleteDialog from "#lib/components/ui/delete-dialog.svelte";
@@ -36,9 +35,9 @@
                 }),
             cell: ({ row }) =>
                 renderComponent(Combobox<number>, {
-                    options: optionsList ?? [],
+                    options: data.options,
                     placeholder: "Bière...",
-                    value: row.original.beerId,
+                    value: row.original.beerId ?? undefined,
                     onchange: (o) => {
                         editZythoLine({ id: row.original.id, beerId: o.value });
                     },
@@ -72,7 +71,7 @@
             id: "actions",
             cell: ({ row }) =>
                 renderComponent(DeleteDialog, {
-                    name: `[ligne zytho] ${data.zytho.date} ${optionsList.find(o => o.value === row.original.beerId)?.name ?? "Sans nomi"}`,
+                    name: `[ligne zytho] ${data.zytho.date} ${data.options.find((o) => o.value === row.original.beerId)?.name ?? "Sans nomi"}`,
                     callback: () => {},
                 }),
         }),
@@ -80,17 +79,6 @@
 
     let processing = $state(false);
     let zythoLines = $state(data.zytho.lines);
-
-    const beerList = allBeers();
-
-    let optionsList = $derived(
-        beerList.current
-            ?.filter((a) => a.name)
-            ?.map((b) => ({
-                value: b.id,
-                name: b.name ?? "",
-            })) ?? [],
-    );
 </script>
 
 <svelte:head>

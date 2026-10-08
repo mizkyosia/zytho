@@ -1,15 +1,16 @@
-import { redirect, type Handle } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
+import { redirect } from "@sveltejs/kit";
+import { ADMIN_TOKEN } from "$app/env/private";
+import type { Handle } from "@sveltejs/kit/hooks";
 
 export const handle: Handle = async ({ event, resolve }) => {
   const token = event.cookies.get("adminToken");
   event.locals.authorized = false;
-  if (token !== env.ADMIN_TOKEN) {
+  if (token !== ADMIN_TOKEN) {
     event.cookies.delete("adminToken", { path: "/" });
     if (event.route.id != "/") {
       return redirect(307, "/");
     }
-  } else if (token === env.ADMIN_TOKEN) {
+  } else if (token === ADMIN_TOKEN) {
     event.locals.authorized = true;
   }
 

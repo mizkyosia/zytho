@@ -15,11 +15,11 @@ export default defineConfig({
       },
       adapter: adapter(),
 
-      typescript: {
-        config: (config) => {
-          config.include.push("../drizzle.config.ts");
-        },
-      },
+      // typescript: {
+      //   config: (config) => {
+      //     config.include.push("../drizzle.config.ts");
+      //   },
+      // },
       experimental: { remoteFunctions: true },
     }),
   ],

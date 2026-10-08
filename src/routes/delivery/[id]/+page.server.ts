@@ -1,4 +1,5 @@
 import { db } from "#lib/server/db/index.js";
+import { beer } from "#lib/server/db/schema.js";
 import { error } from "@sveltejs/kit";
 
 export const load = async ({ params }) => {
@@ -36,5 +37,9 @@ export const load = async ({ params }) => {
     },
   });
 
-  return { delivery, deliveries };
+  const options = (
+    await db.select({ value: beer.id, name: beer.name }).from(beer)
+  ).map((o) => ({ value: o.value, name: o.name || "Sans nom" }));
+
+  return { delivery, deliveries, options };
 };

@@ -6,7 +6,7 @@
         createTable,
         FlexRender,
     } from "@tanstack/svelte-table";
-    import * as Table from "$lib/components/ui/table/index.js";
+    import * as Table from "#lib/components/ui/table/index.js";
     import { features, type DataTableFeatures } from "./data-table-features.js";
     import { Button } from "../button/index.js";
     import { Spinner } from "../spinner/index.js";
@@ -64,30 +64,30 @@
             />
         {/if}
         <!-- {#if enableColumnSelection} -->
-            <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                    {#snippet child({ props })}
-                        <Button {...props} variant="outline" class="ms-auto"
-                            >Affichage</Button
-                        >
-                    {/snippet}
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content align="end">
-                    {#each table
-                        .getAllColumns()
-                        .filter( (col) => col.getCanHide() ) as column (column.id)}
-                        <DropdownMenu.CheckboxItem
-                            class="capitalize"
-                            bind:checked={
-                                () => column.getIsVisible(),
-                                (v) => column.toggleVisibility(!!v)
-                            }
-                        >
-                            {column.id}
-                        </DropdownMenu.CheckboxItem>
-                    {/each}
-                </DropdownMenu.Content>
-            </DropdownMenu.Root>
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                    <Button {...props} variant="outline" class="ms-auto"
+                        >Affichage</Button
+                    >
+                {/snippet}
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end">
+                {#each table
+                    .getAllColumns()
+                    .filter((col) => col.getCanHide()) as column (column.id)}
+                    <DropdownMenu.CheckboxItem
+                        class="capitalize"
+                        bind:checked={
+                            () => column.getIsVisible(),
+                            (v) => column.toggleVisibility(!!v)
+                        }
+                    >
+                        {column.id}
+                    </DropdownMenu.CheckboxItem>
+                {/each}
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
         <!-- {/if} -->
     </div>
 
@@ -120,20 +120,22 @@
                         </Table.Row>
                     {/each}
                     {#if onAddingRowClick}
-                        <Table.Cell class="p-1" colspan={columns.length}>
-                            <Button
-                                variant="ghost"
-                                class="w-full text-xl"
-                                disabled={processing}
-                                onclick={() => onAddingRowClick(table)}
-                            >
-                                {#if processing}
-                                    <Spinner />
-                                {:else}
-                                    +
-                                {/if}
-                            </Button>
-                        </Table.Cell>
+                        <Table.Row>
+                            <Table.Cell class="p-1" colspan={columns.length}>
+                                <Button
+                                    variant="ghost"
+                                    class="w-full text-xl"
+                                    disabled={processing}
+                                    onclick={() => onAddingRowClick(table)}
+                                >
+                                    {#if processing}
+                                        <Spinner />
+                                    {:else}
+                                        +
+                                    {/if}
+                                </Button>
+                            </Table.Cell>
+                        </Table.Row>
                     {/if}
                 {:else}
                     <Table.Row>

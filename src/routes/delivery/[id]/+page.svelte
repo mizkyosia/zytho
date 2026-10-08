@@ -17,7 +17,6 @@
     } from "../../remote/delivery.remote.js";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
     import Combobox from "#lib/components/ui/combobox.svelte";
-    import { allBeers } from "../../remote/beer.remote.js";
     import { DateFormatter } from "@internationalized/date";
 
     const { data } = $props();
@@ -36,7 +35,7 @@
                 }),
             cell: ({ row }) =>
                 renderComponent(Combobox<number>, {
-                    options,
+                    options: data.options,
                     value: row.original.beerId ?? undefined,
                     onchange: (o) => {
                         editDeliveryLine({
@@ -58,24 +57,13 @@
             id: "actions",
             cell: ({ row }) =>
                 renderComponent(DeleteDialog, {
-                    name: `[ligne livraison] ${data.delivery.date} ${options.find((o) => o.value === row.original.beerId)?.name ?? "Sans nom"}`,
+                    name: `[ligne livraison] ${data.delivery.date} ${data.options.find((o) => o.value === row.original.beerId)?.name ?? "Sans nom"}`,
                     callback: () => {},
                 }),
         }),
     ]);
 
     let processing = $state(false);
-
-    const beerList = allBeers();
-
-    let options = $derived(
-        beerList.current
-            ?.filter((a) => a.name)
-            ?.map((b) => ({
-                value: b.id,
-                name: b.name ?? "",
-            })) ?? [],
-    );
 
     const df = new DateFormatter("fr-FR", {
         dateStyle: "medium",

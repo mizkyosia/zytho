@@ -1,6 +1,6 @@
 <script lang="ts">
-    import * as Dialog from "$lib/components/ui/dialog/index.js";
-    import { buttonVariants } from "$lib/components/ui/button/index.js";
+    import * as Dialog from "#lib/components/ui/dialog/index.js";
+    import { buttonVariants } from "#lib/components/ui/button/index.js";
     import type { Snippet } from "svelte";
     import Trash from "@lucide/svelte/icons/trash";
 

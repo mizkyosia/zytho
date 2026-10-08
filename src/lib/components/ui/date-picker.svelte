@@ -9,8 +9,8 @@
 <script lang="ts">
     import CalendarIcon from "@lucide/svelte/icons/calendar";
     import { type DateValue, getLocalTimeZone } from "@internationalized/date";
-    import { cn } from "$lib/utils.js";
-    import { Button } from "$lib/components/ui/button/index.js";
+    import { cn } from "#lib/utils.js";
+    import { Button } from "#lib/components/ui/button/index.js";
     import { Calendar } from "./calendar/index.js";
     import * as Popover from "./popover/index.js";
 

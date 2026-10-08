@@ -1,8 +1,8 @@
 <script lang="ts">
     import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
     import DotIcon from "@lucide/svelte/icons/dot";
-    import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
-    import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+    import * as Breadcrumb from "#lib/components/ui/breadcrumb/index.js";
+    import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
     import House from "@lucide/svelte/icons/house";
 
     interface PathDetails {

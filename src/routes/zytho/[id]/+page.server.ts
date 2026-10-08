@@ -1,4 +1,5 @@
 import { db } from "#lib/server/db/index.js";
+import { beer } from "#lib/server/db/schema.js";
 import { error } from "@sveltejs/kit";
 
 export const load = async ({ params }) => {
@@ -18,5 +19,9 @@ export const load = async ({ params }) => {
 
   if (!zytho) return error(400, "ID inexistante");
 
-  return { zytho };
+  const options = (
+    await db.select({ value: beer.id, name: beer.name }).from(beer)
+  ).map((o) => ({ value: o.value, name: o.name || "Sans nom" }));
+
+  return { zytho, options };
 };
