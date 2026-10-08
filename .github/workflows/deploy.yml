@@ -23,11 +23,5 @@ jobs:
       - name: Setup .env file
         run: echo "${{ secrets.ENV }}" > .env
 
-      - name: Install NPM packages if necessary
-        run: npm install
-
-      - name: Build SvelteKit app
-        run: npm run build
-
-      - name: Deploy Production
+      - name: Deploy Containers
         run: docker compose -f base.compose.yml -f prod.compose.yml up -d --build --force-recreate
