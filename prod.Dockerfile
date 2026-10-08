@@ -1,9 +1,6 @@
 FROM node:26-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN node --version && npm --version
-RUN node -p "process.platform + ' ' + process.arch"
-RUN npm config list
 RUN npm ci
 COPY . .
 RUN npm run build
