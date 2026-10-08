@@ -5,13 +5,11 @@ services:
       dockerfile: prod.Dockerfile
     env_file: .env
     container_name: zytho
-    ports:
-      - "3000:3000"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.zytho.rule=Host(`zytho.mizkyosia.fr`)"
       - "traefik.http.routers.zytho.entrypoints=web"
-      - "traefik.http.services.zytho.loadbalancer.server.port=3000"
+      - "traefik.http.services.zytho.loadbalancer.server.port=5173"
 
 networks:
   traefik-public:
