@@ -5,6 +5,8 @@ services:
       dockerfile: prod.Dockerfile
     env_file: .env
     container_name: zytho
+    ports:
+      - "5173:5173"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.zytho.rule=Host(`zytho.mizkyosia.fr`)"

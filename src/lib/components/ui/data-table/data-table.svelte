@@ -63,7 +63,7 @@
                 class="max-w-sm"
             />
         {/if}
-        <!-- {#if enableColumnSelection} -->
+        {#if enableColumnSelection}
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
                 {#snippet child({ props })}
@@ -88,7 +88,7 @@
                 {/each}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
-        <!-- {/if} -->
+        {/if}
     </div>
 
     <div class="rounded-md border">

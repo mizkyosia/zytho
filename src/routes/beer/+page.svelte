@@ -139,7 +139,8 @@
     data={beers}
     {columns}
     {processing}
-    filterColumn={"name"}
+    filterColumn="name"
+    enableColumnSelection
     onAddingRowClick={async (t) => {
         processing = true;
         let row = await addBeer({});

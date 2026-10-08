@@ -123,6 +123,8 @@
     {columns}
     data={zythos}
     {processing}
+    filterColumn="name"
+    enableColumnSelection
     onAddingRowClick={async (t) => {
         processing = true;
         let row = await addZytho({});

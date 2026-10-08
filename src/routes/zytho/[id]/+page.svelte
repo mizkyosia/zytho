@@ -19,14 +19,6 @@
     const columnHelper = createColumnHelper<DataTable.Features, ZythoLine>();
 
     const beforeColumns = columnHelper.columns([
-        columnHelper.display({
-            id: "link",
-            cell: ({ row }) =>
-                renderComponent(LinkWrapper, {
-                    href: "/beer/" + row.original.id,
-                    text: "",
-                }),
-        }),
         columnHelper.accessor("beerId", {
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
@@ -46,7 +38,7 @@
         columnHelper.accessor("countBefore", {
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
-                    text: "Nombre",
+                    text: "Bières sorties",
                     onclick: column.getToggleSortingHandler(),
                 }),
             cell: ({ row }) =>
@@ -58,7 +50,7 @@
         columnHelper.accessor("countAfter", {
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
-                    text: "Nombre",
+                    text: "Bières rentrées",
                     onclick: column.getToggleSortingHandler(),
                 }),
             cell: ({ row }) =>
@@ -87,10 +79,24 @@
 
 <CustomBreadcrumb
     path={[
-        {
-            name: "Zythos",
-            path: "/zytho",
-        },
+        [
+            {
+                name: "Zythos",
+                path: "/zytho",
+            },
+            {
+                name: "Zythos",
+                path: "/zytho",
+            },
+            {
+                name: "Fûts",
+                path: "/barrel",
+            },
+            {
+                name: "Livraisons",
+                path: "/delivery",
+            },
+        ],
         {
             name: data.zytho.name || "Sans nom",
             path: "/zytho/" + data.zytho.id,
