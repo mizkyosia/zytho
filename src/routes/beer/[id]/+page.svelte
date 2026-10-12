@@ -8,15 +8,25 @@
         renderSnippet,
     } from "@tanstack/svelte-table";
 
+    import { type ErrorContext } from "#lib/client.svelte.js";
+    import { getContext } from "svelte";
+    let errorCtx = getContext<ErrorContext>("error-context");
+
     type DeliveryLine = (typeof data.beer.deliveries)[number];
     type ZythoLine = (typeof data.beer.zythos)[number];
 
-    import LinkWrapper from "#lib/components/ui/link-wrapper.svelte";
+    import SimpleDropdown from "#lib/components/ui/simple-dropdown.svelte";
     import {
         updateDeliveryRow,
         updateZythoRow,
     } from "#lib/components/ui/utils.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
+    import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
+    import { deleteZythoLine } from "../../remote/zytho.remote.js";
+    import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
+    import Trash from "@lucide/svelte/icons/trash";
+    import { deleteDeliveryLine } from "../../remote/delivery.remote.js";
 
     const { data } = $props();
 
@@ -32,11 +42,7 @@
                     text: "Date",
                     onclick: column.getToggleSortingHandler(),
                 }),
-            cell: ({ row }) =>
-                renderComponent(LinkWrapper, {
-                    text: row.original.fullDelivery!.date,
-                    href: "/delivery/" + row.original.deliveryId,
-                }),
+            cell: ({ row }) => row.original.fullDelivery?.date,
         }),
         deliveryColumnHelper.accessor("count", {
             header: ({ column }) =>
@@ -45,6 +51,15 @@
                     onclick: column.getToggleSortingHandler(),
                 }),
             cell: ({ row }) => renderSnippet(updateDeliveryRow, row.original),
+        }),
+        deliveryColumnHelper.display({
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) =>
+                renderComponent(SimpleDropdown, {
+                    children: deliveryMenu,
+                    index: row.index,
+                }),
         }),
     ]);
 
@@ -55,12 +70,12 @@
 
     const preparationColumns = preparationColumnHelper.columns([
         preparationColumnHelper.accessor("zytho.name", {
-            header: "Zytho",
-            cell: ({ row }) =>
-                renderComponent(LinkWrapper, {
-                    text: row.original.zytho?.name ?? "Zytho",
-                    href: "/zytho/" + row.original.zythoId,
+            header: ({ column }) =>
+                renderComponent(DataTable.SortButton, {
+                    text: "Zytho",
+                    onclick: column.getToggleSortingHandler(),
                 }),
+            cell: ({ row }) => row.original.zytho?.name ?? "Zytho",
         }),
         preparationColumnHelper.accessor("zytho.date", {
             header: ({ column }) =>
@@ -94,7 +109,7 @@
                 }),
         }),
         preparationColumnHelper.display({
-            id: "test",
+            id: "soldBeers",
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
                     text: "Bières vendues",
@@ -103,7 +118,22 @@
             cell: ({ row }) =>
                 row.original.countBefore - row.original.countAfter,
         }),
+        preparationColumnHelper.display({
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) =>
+                renderComponent(SimpleDropdown, {
+                    children: zythoMenu,
+                    index: row.index,
+                }),
+        }),
     ]);
+
+    let selectedZytho: number | undefined = $state();
+    let zythos = $state(data.beer.zythos);
+
+    let selectedDelivery: number | undefined = $state();
+    let deliveries = $state(data.beer.deliveries);
 </script>
 
 <CustomBreadcrumb
@@ -125,6 +155,40 @@
     ]}
 />
 
+{#snippet deliveryMenu(index: number)}
+    <ContextMenu.Group>
+        <a href="/delivery/{deliveries[index].deliveryId}" class="contents"
+            ><ContextMenu.Item class="cursor-pointer">
+                <ExternalLink />Détails</ContextMenu.Item
+            ></a
+        >
+        <ContextMenu.Separator />
+        <ContextMenu.Item
+            variant="destructive"
+            class="cursor-pointer"
+            onclick={() => (selectedDelivery = index)}
+            ><Trash /> Supprimer</ContextMenu.Item
+        >
+    </ContextMenu.Group>
+{/snippet}
+
+{#snippet zythoMenu(index: number)}
+    <ContextMenu.Group>
+        <a href="/zytho/{zythos[index].zythoId}" class="contents"
+            ><ContextMenu.Item class="cursor-pointer">
+                <ExternalLink />Détails</ContextMenu.Item
+            ></a
+        >
+        <ContextMenu.Separator />
+        <ContextMenu.Item
+            variant="destructive"
+            class="cursor-pointer"
+            onclick={() => (selectedZytho = index)}
+            ><Trash /> Supprimer</ContextMenu.Item
+        >
+    </ContextMenu.Group>
+{/snippet}
+
 <svelte:head>
     <title>Bières - {data.beer.name}</title>
 </svelte:head>
@@ -142,7 +206,37 @@
 </div>
 
 <h2 class="font-bold m-2">Historique des livraisons :</h2>
-<DataTable.Table data={data.beer.deliveries} columns={deliveryColumns} />
+<DataTable.Table
+    data={deliveries}
+    columns={deliveryColumns}
+    menu={deliveryMenu}
+/>
 
 <h2 class="font-bold m-2 mt-8">Historique des Zythos :</h2>
-<DataTable.Table data={data.beer.zythos} columns={preparationColumns} />
+<DataTable.Table data={zythos} columns={preparationColumns} menu={zythoMenu} />
+
+<DeleteDialogMulti
+    name={(row: number) =>
+        `[ligne zytho] ${zythos[row].id} (${zythos[row].zytho?.name ?? zythos[row].zytho?.date ?? "Test"})`}
+    callback={(row: number) => {
+        const tmp = zythos[row];
+        zythos = zythos.toSpliced(row, 1);
+        deleteZythoLine(tmp.id).catch((e) => {
+            errorCtx.message = `Erreur lors de la suppression de <pre>[ligne zytho] ${zythos[row].id} (${zythos[row].zytho?.name ?? zythos[row].zytho?.date})</pre>`;
+        });
+    }}
+    bind:selectedItem={selectedZytho}
+/>
+
+<DeleteDialogMulti
+    name={(row: number) =>
+        `[ligne livraisonI] ${deliveries[row].id} (${deliveries[row].fullDelivery?.date})`}
+    callback={(row: number) => {
+        const tmp = deliveries[row];
+        deliveries = deliveries.toSpliced(row, 1);
+        deleteDeliveryLine(tmp.id).catch((e) => {
+            errorCtx.message = `Erreur lors de la suppression de <pre>[ligne livraison] ${deliveries[row].id} (${deliveries[row].fullDelivery?.date})</pre>`;
+        });
+    }}
+    bind:selectedItem={selectedDelivery}
+/>

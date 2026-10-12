@@ -2,7 +2,7 @@
     import "./layout.css";
     import AlertIcon from "@lucide/svelte/icons/circle-alert";
     import * as Card from "#lib/components/ui/card/index.js";
-    import { Button } from "#lib/components/ui/button/index.js";
+    import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
     import {
         FieldGroup,
         Field,
@@ -11,6 +11,24 @@
     import * as Alert from "#lib/components/ui/alert/index.js";
     import { Input } from "#lib/components/ui/input/index.js";
     import { login } from "./remote/login.remote";
+
+    import * as Dialog from "#lib/components/ui/dialog/index.js";
+    import { setContext } from "svelte";
+    import { type ErrorContext } from "#lib/client.svelte.js";
+
+    const errorCtx: ErrorContext = $state({
+        set message(value: string | undefined) {
+            this._innerMsg = value;
+            this._show = !!value;
+        },
+        get message() {
+            return this._innerMsg;
+        },
+        _innerMsg: undefined,
+        _show: false,
+    });
+
+    setContext<ErrorContext>("error-context", errorCtx);
 
     let { children, data } = $props();
 </script>
@@ -58,3 +76,16 @@
         </Card.Root>
     {/if}
 </div>
+
+<Dialog.Root bind:open={errorCtx._show}>
+    <Dialog.Content class="w-xs">
+        <Dialog.Header class="text-destructive text-shadow-destructive">
+            <Dialog.Title>Erreur</Dialog.Title>
+            <Dialog.Description>{@html errorCtx._innerMsg}</Dialog.Description>
+        </Dialog.Header>
+        <Dialog.Close
+            class={[buttonVariants({ variant: "default" }), "w-12 ml-auto"]}
+            >OK</Dialog.Close
+        >
+    </Dialog.Content>
+</Dialog.Root>

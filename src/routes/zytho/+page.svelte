@@ -12,7 +12,11 @@
     import DataTableSortButton from "#lib/components/ui/data-table/data-table-sort-button.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
     import { Input } from "#lib/components/ui/input/index.js";
-    import { addZytho, editZytho } from "../remote/zytho.remote.js";
+    import {
+        addZytho,
+        deleteZytho,
+        editZytho,
+    } from "../remote/zytho.remote.js";
     import DatePicker from "#lib/components/ui/date-picker.svelte";
     import { parseDate } from "@internationalized/date";
     import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
@@ -20,6 +24,10 @@
     import ExternalLink from "@lucide/svelte/icons/external-link";
     import Trash from "@lucide/svelte/icons/trash";
     import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
+
+    import { type ErrorContext } from "#lib/client.svelte.js";
+    import { getContext } from "svelte";
+    let errorCtx = getContext<ErrorContext>("error-context");
 
     type Zytho = (typeof data.zythos)[number];
 
@@ -151,7 +159,11 @@
 <DeleteDialogMulti
     name={(row: number) => `[zytho] ${zythos[row]?.name ?? zythos[row]?.date}`}
     callback={(row: number) => {
+        const tmp = zythos[row];
         zythos = zythos.toSpliced(row, 1);
+        deleteZytho(tmp.id).catch((e) => {
+            errorCtx.message = `Erreur lors de la suppression de <pre>[zytho] ${zythos[row].name}</pre>`;
+        });
     }}
-    {selectedItem}
+    bind:selectedItem
 />

@@ -120,10 +120,11 @@
                     {#each table.getRowModel().rows as row, i (row.id)}
                         <ContextMenu.Root>
                             <ContextMenu.Trigger>
-                                {#snippet child()}
+                                {#snippet child({ props })}
                                     <Table.Row
                                         data-state={row.getIsSelected() &&
                                             "selected"}
+                                        {...props}
                                     >
                                         {#each row.getVisibleCells() as cell (cell.id)}
                                             <Table.Cell>

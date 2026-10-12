@@ -6,7 +6,11 @@
         renderComponent,
         renderSnippet,
     } from "@tanstack/svelte-table";
-    import { addDelivery, editDelivery } from "../remote/delivery.remote.js";
+    import {
+        addDelivery,
+        deleteDelivery,
+        editDelivery,
+    } from "../remote/delivery.remote.js";
     import { Input } from "#lib/components/ui/input/index.js";
     import DatePicker from "#lib/components/ui/date-picker.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
@@ -15,6 +19,10 @@
     import Trash from "@lucide/svelte/icons/trash";
     import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
     import SimpleDropdown from "#lib/components/ui/simple-dropdown.svelte";
+
+    import { type ErrorContext } from "#lib/client.svelte.js";
+    import { getContext } from "svelte";
+    let errorCtx = getContext<ErrorContext>("error-context");
 
     const { data } = $props();
 
@@ -148,7 +156,11 @@
 <DeleteDialogMulti
     name={(row: number) => `[zytho] ${deliveries[row]?.date}`}
     callback={(row: number) => {
+        const tmp = deliveries[row];
         deliveries = deliveries.toSpliced(row, 1);
+        deleteDelivery(tmp.id).catch((e) => {
+            errorCtx.message = `Erreur lors de la suppression de <pre>[biere] ${deliveries[row].name}</pre>`;
+        });
     }}
-    {selectedItem}
+    bind:selectedItem
 />

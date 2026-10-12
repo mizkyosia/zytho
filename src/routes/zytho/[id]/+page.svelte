@@ -7,10 +7,22 @@
         renderComponent,
         renderSnippet,
     } from "@tanstack/svelte-table";
-    import { addZythoLine, editZythoLine } from "../../remote/zytho.remote.js";
+    import {
+        addZythoLine,
+        deleteZythoLine,
+        editZythoLine,
+    } from "../../remote/zytho.remote.js";
     import Combobox from "#lib/components/ui/combobox.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
-    import DeleteDialog from "#lib/components/ui/delete-dialog.svelte";
+
+    import { type ErrorContext } from "#lib/client.svelte.js";
+    import { getContext } from "svelte";
+    import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
+    import SimpleDropdown from "#lib/components/ui/simple-dropdown.svelte";
+    import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
+    import Trash from "@lucide/svelte/icons/trash";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
+    let errorCtx = getContext<ErrorContext>("error-context");
 
     const { data } = $props();
 
@@ -61,17 +73,36 @@
         }),
         columnHelper.display({
             id: "actions",
+            header: "Actions",
             cell: ({ row }) =>
-                renderComponent(DeleteDialog, {
-                    name: `[ligne zytho] ${data.zytho.date} ${data.options.find((o) => o.value === row.original.beerId)?.name ?? "Sans nomi"}`,
-                    callback: () => {},
+                renderComponent(SimpleDropdown, {
+                    children: menu,
+                    index: row.index,
                 }),
         }),
     ]);
 
     let processing = $state(false);
     let zythoLines = $state(data.zytho.lines);
+    let selectedItem: number | undefined = $state();
 </script>
+
+{#snippet menu(index: number)}
+    <ContextMenu.Group>
+        <a href="/beer/{zythoLines[index].beerId}" class="contents"
+            ><ContextMenu.Item class="cursor-pointer">
+                <ExternalLink />Détails</ContextMenu.Item
+            ></a
+        >
+        <ContextMenu.Separator />
+        <ContextMenu.Item
+            variant="destructive"
+            class="cursor-pointer"
+            onclick={() => (selectedItem = index)}
+            ><Trash /> Supprimer</ContextMenu.Item
+        >
+    </ContextMenu.Group>
+{/snippet}
 
 <svelte:head>
     <title>Zythos - {data.zytho.name ?? "Zytho"}</title>
@@ -123,4 +154,17 @@
 
         processing = false;
     }}
+    {menu}
+/>
+
+<DeleteDialogMulti
+    name={(row: number) => `[ligne zytho] ${zythoLines[row].id}`}
+    callback={(row: number) => {
+        const tmp = zythoLines[row];
+        zythoLines = zythoLines.toSpliced(row, 1);
+        deleteZythoLine(tmp.id).catch((e) => {
+            errorCtx.message = `Erreur lors de la suppression de <pre>[ligne zytho] ${zythoLines[row].id}</pre>`;
+        });
+    }}
+    bind:selectedItem
 />

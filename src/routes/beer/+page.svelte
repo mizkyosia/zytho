@@ -6,13 +6,19 @@
         renderSnippet,
     } from "@tanstack/svelte-table";
     import { Input } from "#lib/components/ui/input/index.js";
-    import { addBeer, allBeers, editBeer } from "../remote/beer.remote.js";
+    import {
+        addBeer,
+        allBeers,
+        deleteBeer,
+        editBeer,
+    } from "../remote/beer.remote.js";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
     import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
     import Trash from "@lucide/svelte/icons/trash";
     import ExternalLink from "@lucide/svelte/icons/external-link";
     import SimpleDropdown from "#lib/components/ui/simple-dropdown.svelte";
     import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
+    import { getContext } from "svelte";
 
     const { data } = $props();
 
@@ -81,6 +87,9 @@
         }),
     ]);
 
+    import { type ErrorContext } from "#lib/client.svelte.js";
+    let errorCtx = getContext<ErrorContext>("error-context");
+
     let processing = $state(false);
     let beers = $state(data.beers);
     let selectedItem: number | undefined = $state();
@@ -145,9 +154,13 @@
 <DeleteDialogMulti
     name={(row: number) => `[biere] ${beers[row].name}`}
     callback={(row: number) => {
+        const tmp = beers[row];
         beers = beers.toSpliced(row, 1);
+        deleteBeer(tmp.id).catch((e) => {
+            errorCtx.message = `Erreur lors de la suppression de <pre>[biere] ${beers[row].name}</pre>`;
+        });
     }}
-    {selectedItem}
+    bind:selectedItem
 />
 
 <svelte:head>
