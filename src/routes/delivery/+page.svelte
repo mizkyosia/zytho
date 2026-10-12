@@ -9,9 +9,12 @@
     import { addDelivery, editDelivery } from "../remote/delivery.remote.js";
     import { Input } from "#lib/components/ui/input/index.js";
     import DatePicker from "#lib/components/ui/date-picker.svelte";
-    import LinkWrapper from "#lib/components/ui/link-wrapper.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
-    import DeleteDialog from "#lib/components/ui/delete-dialog.svelte";
+    import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
+    import Trash from "@lucide/svelte/icons/trash";
+    import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
+    import SimpleDropdown from "#lib/components/ui/simple-dropdown.svelte";
 
     const { data } = $props();
 
@@ -20,13 +23,6 @@
     const columnHelper = createColumnHelper<DataTable.Features, Delivery>();
 
     const columns = columnHelper.columns([
-        columnHelper.display({
-            id: "link",
-            cell: ({ row }) =>
-                renderComponent(LinkWrapper, {
-                    href: "/delivery/" + row.original.id,
-                }),
-        }),
         columnHelper.accessor("date", {
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
@@ -52,17 +48,36 @@
         }),
         columnHelper.display({
             id: "actions",
+            header: "Actions",
             cell: ({ row }) =>
-                renderComponent(DeleteDialog, {
-                    name: `[livraison] ${row.original.date}`,
-                    callback: () => {},
+                renderComponent(SimpleDropdown, {
+                    children: menu,
+                    index: row.index,
                 }),
         }),
     ]);
 
     let processing = $state(false);
     let deliveries = $state(data.deliveries);
+    let selectedItem: number | undefined = $state();
 </script>
+
+{#snippet menu(index: number)}
+    <ContextMenu.Group>
+        <a href="/delivery/{deliveries[index]?.id}" class="contents"
+            ><ContextMenu.Item class="cursor-pointer">
+                <ExternalLink /> Détails</ContextMenu.Item
+            ></a
+        >
+        <ContextMenu.Separator />
+        <ContextMenu.Item
+            variant="destructive"
+            class="cursor-pointer"
+            onclick={() => (selectedItem = index)}
+            ><Trash /> Supprimer</ContextMenu.Item
+        >
+    </ContextMenu.Group>
+{/snippet}
 
 {#snippet updateDeliveryPrice(row: Delivery)}
     <Input
@@ -120,11 +135,20 @@
     data={deliveries}
     {columns}
     {processing}
-    enableColumnSelection={true}
+    enableColumnSelection
     onAddingRowClick={async (t) => {
         processing = true;
         let row = await addDelivery({});
         deliveries = [...deliveries, { ...row, beerCount: 0 }];
         processing = false;
     }}
+    {menu}
+/>
+
+<DeleteDialogMulti
+    name={(row: number) => `[zytho] ${deliveries[row]?.date}`}
+    callback={(row: number) => {
+        deliveries = deliveries.toSpliced(row, 1);
+    }}
+    {selectedItem}
 />

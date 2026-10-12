@@ -1,6 +1,5 @@
 <script lang="ts">
     import * as DataTable from "#lib/components/ui/data-table/data-table.js";
-    import DeleteDialog from "#lib/components/ui/delete-dialog.svelte";
     import {
         createColumnHelper,
         renderComponent,
@@ -8,9 +7,12 @@
     } from "@tanstack/svelte-table";
     import { Input } from "#lib/components/ui/input/index.js";
     import { addBeer, allBeers, editBeer } from "../remote/beer.remote.js";
-    import LinkWrapper from "#lib/components/ui/link-wrapper.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
+    import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
     import Trash from "@lucide/svelte/icons/trash";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
+    import SimpleDropdown from "#lib/components/ui/simple-dropdown.svelte";
+    import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
 
     const { data } = $props();
 
@@ -19,14 +21,6 @@
     const columnHelper = createColumnHelper<DataTable.Features, Beer>();
 
     const columns = columnHelper.columns([
-        columnHelper.display({
-            id: "link",
-            cell: ({ row }) =>
-                renderComponent(LinkWrapper, {
-                    href: "/beer/" + row.original.id,
-                    text: "",
-                }),
-        }),
         columnHelper.accessor("name", {
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
@@ -78,16 +72,18 @@
         }),
         columnHelper.display({
             id: "actions",
+            header: "Actions",
             cell: ({ row }) =>
-                renderComponent(DeleteDialog, {
-                    name: `[biere] ${row.original.name}`,
-                    callback: () => {},
+                renderComponent(SimpleDropdown, {
+                    children: menu,
+                    index: row.index,
                 }),
         }),
     ]);
 
     let processing = $state(false);
     let beers = $state(data.beers);
+    let selectedItem: number | undefined = $state();
 </script>
 
 {#snippet updateBeerRow({
@@ -120,6 +116,23 @@
     />
 {/snippet}
 
+{#snippet menu(index: number)}
+    <ContextMenu.Group>
+        <a href="/beer/{beers[index].id}" class="contents"
+            ><ContextMenu.Item class="cursor-pointer">
+                <ExternalLink /> Détails</ContextMenu.Item
+            ></a
+        >
+        <ContextMenu.Separator />
+        <ContextMenu.Item
+            variant="destructive"
+            class="cursor-pointer"
+            onclick={() => (selectedItem = index)}
+            ><Trash /> Supprimer</ContextMenu.Item
+        >
+    </ContextMenu.Group>
+{/snippet}
+
 <CustomBreadcrumb
     path={[
         {
@@ -127,6 +140,14 @@
             path: "/beer",
         },
     ]}
+/>
+
+<DeleteDialogMulti
+    name={(row: number) => `[biere] ${beers[row].name}`}
+    callback={(row: number) => {
+        beers = beers.toSpliced(row, 1);
+    }}
+    {selectedItem}
 />
 
 <svelte:head>
@@ -147,4 +168,5 @@
         beers = [...beers, row];
         processing = false;
     }}
+    {menu}
 />

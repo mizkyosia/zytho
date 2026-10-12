@@ -7,16 +7,20 @@
     interface Props {
         name: string;
         callback: () => void;
+        children?: Snippet;
     }
 
-    const { name, callback }: Props = $props();
+    const { name, callback, children = fallback }: Props = $props();
 </script>
 
-<Dialog.Root>
-    <Dialog.Trigger
+{#snippet fallback()}
+    <Trash
         class={[buttonVariants({ variant: "destructive" }), "cursor-pointer"]}
-    >
-        <Trash />
+    />
+{/snippet}
+<Dialog.Root>
+    <Dialog.Trigger class="contents">
+        {@render children()}
     </Dialog.Trigger>
     <Dialog.Content class="sm:max-w-md">
         <Dialog.Header>

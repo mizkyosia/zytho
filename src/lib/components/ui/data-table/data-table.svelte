@@ -7,6 +7,7 @@
         FlexRender,
     } from "@tanstack/svelte-table";
     import * as Table from "#lib/components/ui/table/index.js";
+    import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
     import { features, type DataTableFeatures } from "./data-table-features.js";
     import { Button } from "../button/index.js";
     import { Spinner } from "../spinner/index.js";
@@ -14,6 +15,8 @@
     import type { Features } from "./data-table.js";
     import { Input } from "../input/index.js";
     import * as DropdownMenu from "../dropdown-menu/index.js";
+    import { cn } from "cn";
+    import type { Snippet } from "svelte";
 
     type DataTableProps<TData extends RowData> = {
         columns: ColumnDef<DataTableFeatures, TData>[];
@@ -22,6 +25,8 @@
         processing?: boolean;
         filterColumn?: string & keyof TData;
         enableColumnSelection?: boolean;
+        resultsPerPage?: number;
+        menu?: Snippet<[number]>;
     };
 
     let {
@@ -31,6 +36,8 @@
         processing = false,
         enableColumnSelection = false,
         filterColumn,
+        resultsPerPage = 10000,
+        menu,
     }: DataTableProps<TData> = $props();
 
     const table = createTable({
@@ -39,6 +46,8 @@
             return data;
         },
         columns,
+        rowCount: resultsPerPage,
+        manualPagination: true,
     });
 </script>
 
@@ -64,30 +73,30 @@
             />
         {/if}
         {#if enableColumnSelection}
-        <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-                {#snippet child({ props })}
-                    <Button {...props} variant="outline" class="ms-auto"
-                        >Affichage</Button
-                    >
-                {/snippet}
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-                {#each table
-                    .getAllColumns()
-                    .filter((col) => col.getCanHide()) as column (column.id)}
-                    <DropdownMenu.CheckboxItem
-                        class="capitalize"
-                        bind:checked={
-                            () => column.getIsVisible(),
-                            (v) => column.toggleVisibility(!!v)
-                        }
-                    >
-                        {column.id}
-                    </DropdownMenu.CheckboxItem>
-                {/each}
-            </DropdownMenu.Content>
-        </DropdownMenu.Root>
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                    {#snippet child({ props })}
+                        <Button {...props} variant="outline" class="ms-auto"
+                            >Affichage</Button
+                        >
+                    {/snippet}
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content align="end">
+                    {#each table
+                        .getAllColumns()
+                        .filter( (col) => col.getCanHide() ) as column (column.id)}
+                        <DropdownMenu.CheckboxItem
+                            class="capitalize"
+                            bind:checked={
+                                () => column.getIsVisible(),
+                                (v) => column.toggleVisibility(!!v)
+                            }
+                        >
+                            {column.id}
+                        </DropdownMenu.CheckboxItem>
+                    {/each}
+                </DropdownMenu.Content>
+            </DropdownMenu.Root>
         {/if}
     </div>
 
@@ -108,16 +117,30 @@
             </Table.Header>
             <Table.Body>
                 {#if table.getRowCount() > 0}
-                    {#each table.getRowModel().rows as row (row.id)}
-                        <Table.Row
-                            data-state={row.getIsSelected() && "selected"}
-                        >
-                            {#each row.getVisibleCells() as cell (cell.id)}
-                                <Table.Cell>
-                                    <FlexRender {cell} />
-                                </Table.Cell>
-                            {/each}
-                        </Table.Row>
+                    {#each table.getRowModel().rows as row, i (row.id)}
+                        <ContextMenu.Root>
+                            <ContextMenu.Trigger>
+                                {#snippet child()}
+                                    <Table.Row
+                                        data-state={row.getIsSelected() &&
+                                            "selected"}
+                                    >
+                                        {#each row.getVisibleCells() as cell (cell.id)}
+                                            <Table.Cell>
+                                                <FlexRender {cell} />
+                                            </Table.Cell>
+                                        {/each}
+                                    </Table.Row>
+                                    {#if menu}
+                                        <ContextMenu.Content
+                                            class="outline-none"
+                                        >
+                                            {@render menu(i)}
+                                        </ContextMenu.Content>
+                                    {/if}
+                                {/snippet}
+                            </ContextMenu.Trigger>
+                        </ContextMenu.Root>
                     {/each}
                     {#if onAddingRowClick}
                         <Table.Row>
@@ -179,3 +202,19 @@
         </Table.Root>
     </div>
 </div>
+
+<!-- <ContextMenu.Root>
+    <ContextMenu.Trigger
+        class="flex aspect-video w-full max-w-xs items-center justify-center rounded-xl border border-dashed text-sm"
+    >
+        <span class="hidden pointer-fine:inline-block">Right click here</span>
+        <span class="hidden pointer-coarse:inline-block">Long press here</span>
+    </ContextMenu.Trigger>
+    <ContextMenu.Content>
+        <ContextMenu.Group>
+            <ContextMenu.Item>Back</ContextMenu.Item>
+            <ContextMenu.Item disabled>Forward</ContextMenu.Item>
+            <ContextMenu.Item>Reload</ContextMenu.Item>
+        </ContextMenu.Group>
+    </ContextMenu.Content>
+</ContextMenu.Root> -->

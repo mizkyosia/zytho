@@ -19,3 +19,5 @@ volumes:
 
 networks:
   zytho:
+    name: zytho
+    driver: bridge
