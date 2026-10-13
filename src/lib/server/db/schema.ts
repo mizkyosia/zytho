@@ -58,4 +58,8 @@ export const barrel = pgTable("Barrel", {
   id: serial("id").primaryKey(),
   beerName: text("name").notNull(),
   opened: date("opened"),
+  deliveryId: integer("deliveryId").references(() => delivery.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
 });

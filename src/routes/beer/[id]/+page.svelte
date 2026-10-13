@@ -7,6 +7,7 @@
         renderComponent,
         renderSnippet,
     } from "@tanstack/svelte-table";
+    import Combobox from "#lib/components/ui/combobox.svelte";
 
     import { type ErrorContext } from "#lib/client.svelte.js";
     import { getContext } from "svelte";
@@ -22,11 +23,17 @@
     } from "#lib/components/ui/utils.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
     import DeleteDialogMulti from "#lib/components/ui/delete-dialog-multi.svelte";
-    import { deleteZythoLine } from "../../remote/zytho.remote.js";
+    import {
+        deleteZythoLine,
+        editZythoLine,
+    } from "../../remote/zytho.remote.js";
     import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
     import ExternalLink from "@lucide/svelte/icons/external-link";
     import Trash from "@lucide/svelte/icons/trash";
-    import { deleteDeliveryLine } from "../../remote/delivery.remote.js";
+    import {
+        deleteDeliveryLine,
+        editDeliveryLine,
+    } from "../../remote/delivery.remote.js";
 
     const { data } = $props();
 
@@ -42,7 +49,17 @@
                     text: "Date",
                     onclick: column.getToggleSortingHandler(),
                 }),
-            cell: ({ row }) => row.original.fullDelivery?.date,
+            cell: ({ row }) =>
+                renderComponent(Combobox<number>, {
+                    options: data.deliveries,
+                    value: row.original.deliveryId ?? undefined,
+                    onchange: (o) => {
+                        editDeliveryLine({
+                            id: row.original.id,
+                            deliveryId: o.value,
+                        }).catch((e) => console.error(e));
+                    },
+                }),
         }),
         deliveryColumnHelper.accessor("count", {
             header: ({ column }) =>
@@ -75,7 +92,17 @@
                     text: "Zytho",
                     onclick: column.getToggleSortingHandler(),
                 }),
-            cell: ({ row }) => row.original.zytho?.name ?? "Zytho",
+            cell: ({ row }) =>
+                renderComponent(Combobox<number>, {
+                    options: data.zythos,
+                    value: row.original.zythoId ?? undefined,
+                    onchange: (o) => {
+                        editZythoLine({
+                            id: row.original.id,
+                            zythoId: o.value,
+                        }).catch((e) => console.error(e));
+                    },
+                }),
         }),
         preparationColumnHelper.accessor("zytho.date", {
             header: ({ column }) =>

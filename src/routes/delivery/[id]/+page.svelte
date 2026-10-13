@@ -6,7 +6,6 @@
         renderComponent,
         renderSnippet,
     } from "@tanstack/svelte-table";
-    import DeleteDialog from "#lib/components/ui/delete-dialog.svelte";
 
     import { type ErrorContext } from "#lib/client.svelte.js";
     import { getContext } from "svelte";

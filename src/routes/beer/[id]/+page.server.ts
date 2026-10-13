@@ -1,5 +1,7 @@
 import { db } from "#lib/server/db/index.js";
+import { delivery, zytho, beer as beerTable } from "#lib/server/db/schema.js";
 import { error } from "@sveltejs/kit";
+import { eq, not } from "drizzle-orm";
 
 export const load = async ({ params }) => {
   const id = parseInt(params.id);
@@ -36,17 +38,22 @@ export const load = async ({ params }) => {
 
   if (!beer) return error(400, "Bière non répertoriée");
 
-  const beers = await db.query.beer.findMany({
-    columns: {
-      id: true,
-      name: true,
-    },
-    where: {
-      NOT: {
-        id: beer.id,
-      },
-    },
-  });
+  const beers = await db
+    .select({ id: beerTable.id, name: beerTable.name })
+    .from(beerTable)
+    .where(not(eq(beerTable.id, beer.id)));
 
-  return { beer, beers };
+  const deliveries = (
+    await db.select({ id: delivery.id, date: delivery.date }).from(delivery)
+  ).map((z) => ({
+    value: z.id,
+    name: z.date,
+  }));
+
+  const zythos = (await db.select().from(zytho)).map((z) => ({
+    value: z.id,
+    name: z.name || "Zytho du " + z.date,
+  }));
+
+  return { beer, beers, deliveries, zythos };
 };
