@@ -1,14 +1,12 @@
 import { db } from "#lib/server/db/index.js";
 import { deliveryLine, delivery } from "#lib/server/db/schema.js";
-import { command, getRequestEvent, query } from "$app/server";
-import { error } from "@sveltejs/kit";
+import { requireAuth } from "#lib/server/auth.js";
+import { command, query } from "$app/server";
 import { eq, sql } from "drizzle-orm";
 import * as v from "valibot";
 
 export const getAll = query(async () => {
-  const { locals } = getRequestEvent();
-  if (!locals.authorized)
-    return error(401, { message: "Veuillez vous authentifier" });
+  requireAuth();
 
   const deliveries = await db.select().from(delivery);
 
@@ -16,9 +14,7 @@ export const getAll = query(async () => {
 });
 
 export const getDetails = query(v.number(), async (zythoId) => {
-  const { locals } = getRequestEvent();
-  if (!locals.authorized)
-    return error(401, { message: "Veuillez vous authentifier" });
+  requireAuth();
 
   const delivery = await db.query.delivery.findFirst({
     where: {
@@ -37,6 +33,7 @@ export const editDelivery = command(
     price: v.optional(v.number()),
   }),
   async ({ id, ...row }) => {
+    requireAuth();
     await db.update(delivery).set(row).where(eq(delivery.id, id));
 
     return { success: true };
@@ -49,6 +46,7 @@ export const addDelivery = command(
     price: v.optional(v.number()),
   }),
   async (row) => {
+    requireAuth();
     let res = await db
       .insert(delivery)
       .values({
@@ -63,6 +61,7 @@ export const addDelivery = command(
 );
 
 export const deleteDelivery = command(v.number(), async (id) => {
+  requireAuth();
   await db.delete(delivery).where(eq(delivery.id, id));
 
   return { success: true };
@@ -80,6 +79,7 @@ export const editDeliveryLine = command(
     ...deliveryLineSchema.entries,
   }),
   async ({ id, ...row }) => {
+    requireAuth();
     await db.update(deliveryLine).set(row).where(eq(deliveryLine.id, id));
 
     return { success: true };
@@ -87,6 +87,7 @@ export const editDeliveryLine = command(
 );
 
 export const addDeliveryLine = command(deliveryLineSchema, async (row) => {
+  requireAuth();
   const res = await db
     .insert(deliveryLine)
     .values({ count: 0, ...row })
@@ -96,6 +97,7 @@ export const addDeliveryLine = command(deliveryLineSchema, async (row) => {
 });
 
 export const deleteDeliveryLine = command(v.number(), async (id) => {
+  requireAuth();
   await db.delete(deliveryLine).where(eq(deliveryLine.id, id));
 
   return { success: true };

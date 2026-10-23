@@ -1,7 +1,9 @@
 import { db } from "#lib/server/db/index.js";
 import { delivery, zytho, beer as beerTable } from "#lib/server/db/schema.js";
+import { beerStocks } from "#lib/server/db/stats.js";
+import { formatDate, zythoName } from "#lib/format.js";
 import { error } from "@sveltejs/kit";
-import { eq, not } from "drizzle-orm";
+import { desc, eq, not } from "drizzle-orm";
 
 export const load = async ({ params }) => {
   const id = parseInt(params.id);
@@ -38,22 +40,31 @@ export const load = async ({ params }) => {
 
   if (!beer) return error(400, "Bière non répertoriée");
 
+  const [stock] = await beerStocks(db, eq(beerTable.id, id));
+
   const beers = await db
     .select({ id: beerTable.id, name: beerTable.name })
     .from(beerTable)
     .where(not(eq(beerTable.id, beer.id)));
 
   const deliveries = (
-    await db.select({ id: delivery.id, date: delivery.date }).from(delivery)
+    await db
+      .select({ id: delivery.id, date: delivery.date })
+      .from(delivery)
+      .orderBy(desc(delivery.date))
+  ).map((d) => ({
+    value: d.id,
+    name: formatDate(d.date),
+    date: d.date,
+  }));
+
+  const zythos = (
+    await db.select().from(zytho).orderBy(desc(zytho.date))
   ).map((z) => ({
     value: z.id,
-    name: z.date,
+    name: zythoName(z),
+    zytho: z,
   }));
 
-  const zythos = (await db.select().from(zytho)).map((z) => ({
-    value: z.id,
-    name: z.name || "Zytho du " + z.date,
-  }));
-
-  return { beer, beers, deliveries, zythos };
+  return { beer, stock, beers, deliveries, zythos };
 };

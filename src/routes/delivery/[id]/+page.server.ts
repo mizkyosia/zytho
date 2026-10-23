@@ -1,6 +1,7 @@
 import { db } from "#lib/server/db/index.js";
-import { beer } from "#lib/server/db/schema.js";
+import { barrel, beer } from "#lib/server/db/schema.js";
 import { error } from "@sveltejs/kit";
+import { and, eq, isNull } from "drizzle-orm";
 
 export const load = async ({ params }) => {
   const id = parseInt(params.id);
@@ -20,6 +21,12 @@ export const load = async ({ params }) => {
           beerId: true,
         },
       },
+      barrels: {
+        orderBy: { id: "asc" },
+      },
+      returnedBarrels: {
+        columns: { id: true, name: true, opened: true },
+      },
     },
   });
 
@@ -35,11 +42,26 @@ export const load = async ({ params }) => {
         id: delivery.id,
       },
     },
+    orderBy: { date: "desc" },
   });
 
   const options = (
-    await db.select({ value: beer.id, name: beer.name }).from(beer)
-  ).map((o) => ({ value: o.value, name: o.name || "Sans nom" }));
+    await db
+      .select({
+        value: beer.id,
+        name: beer.name,
+        buyingPrice: beer.buyingPrice,
+      })
+      .from(beer)
+  ).map((o) => ({ ...o, name: o.name || "Sans nom" }));
 
-  return { delivery, deliveries, options };
+  // Empty barrels which haven't been given back yet
+  const returnable = (
+    await db
+      .select({ value: barrel.id, name: barrel.name, opened: barrel.opened })
+      .from(barrel)
+      .where(and(eq(barrel.status, "emptied"), isNull(barrel.returnDeliveryId)))
+  ).map((b) => ({ ...b, name: `${b.name || "Sans nom"} (#${b.value})` }));
+
+  return { delivery, deliveries, options, returnable };
 };

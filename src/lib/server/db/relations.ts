@@ -7,6 +7,16 @@ export const relations = defineRelations(schema, (r) => ({
   },
   delivery: {
     lines: r.many.deliveryLine(),
+    barrels: r.many.barrel({
+      from: r.delivery.id,
+      to: r.barrel.deliveryId,
+      alias: "delivered",
+    }),
+    returnedBarrels: r.many.barrel({
+      from: r.delivery.id,
+      to: r.barrel.returnDeliveryId,
+      alias: "returned",
+    }),
   },
 
   beer: {
@@ -32,6 +42,18 @@ export const relations = defineRelations(schema, (r) => ({
     fullDelivery: r.one.delivery({
       from: r.deliveryLine.deliveryId,
       to: r.delivery.id,
+    }),
+  },
+  barrel: {
+    delivery: r.one.delivery({
+      from: r.barrel.deliveryId,
+      to: r.delivery.id,
+      alias: "delivered",
+    }),
+    returnDelivery: r.one.delivery({
+      from: r.barrel.returnDeliveryId,
+      to: r.delivery.id,
+      alias: "returned",
     }),
   },
 }));

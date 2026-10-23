@@ -11,7 +11,8 @@
         deleteDelivery,
         editDelivery,
     } from "../remote/delivery.remote.js";
-    import { Input } from "#lib/components/ui/input/index.js";
+    import EditableCell from "#lib/components/ui/editable-cell.svelte";
+    import { formatDate, formatPrice } from "#lib/format.js";
     import DatePicker from "#lib/components/ui/date-picker.svelte";
     import CustomBreadcrumb from "#lib/components/ui/custom-breadcrumb.svelte";
     import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
@@ -32,6 +33,7 @@
 
     const columns = columnHelper.columns([
         columnHelper.accessor("date", {
+            meta: { label: "Date" },
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
                     text: "Date",
@@ -39,18 +41,42 @@
                 }),
             cell: ({ row }) => renderSnippet(updateDeliveryDate, row.original),
         }),
-        columnHelper.accessor("price", {
+        columnHelper.accessor("theoreticalCost", {
+            meta: { label: "Coût théorique" },
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
-                    text: "Coût",
+                    text: "Coût théorique",
                     onclick: column.getToggleSortingHandler(),
                 }),
-            cell: ({ row }) => renderSnippet(updateDeliveryPrice, row.original),
+            cell: ({ row }) => formatPrice(row.original.theoreticalCost),
         }),
-        columnHelper.accessor("beerCount", {
+        columnHelper.accessor("price", {
+            meta: { label: "Prix facturé" },
             header: ({ column }) =>
                 renderComponent(DataTable.SortButton, {
-                    text: "Bières",
+                    text: "Prix facturé (€)",
+                    onclick: column.getToggleSortingHandler(),
+                }),
+            cell: ({ row }) =>
+                renderComponent(EditableCell<Delivery, "price">, {
+                    row: row.original,
+                    column: "price",
+                    save: editDelivery,
+                }),
+        }),
+        columnHelper.accessor("beerCount", {
+            meta: { label: "Bières livrées" },
+            header: ({ column }) =>
+                renderComponent(DataTable.SortButton, {
+                    text: "Bières livrées",
+                    onclick: column.getToggleSortingHandler(),
+                }),
+        }),
+        columnHelper.accessor("barrelCount", {
+            meta: { label: "Fûts livrés" },
+            header: ({ column }) =>
+                renderComponent(DataTable.SortButton, {
+                    text: "Fûts livrés",
                     onclick: column.getToggleSortingHandler(),
                 }),
         }),
@@ -85,25 +111,6 @@
             ><Trash /> Supprimer</ContextMenu.Item
         >
     </ContextMenu.Group>
-{/snippet}
-
-{#snippet updateDeliveryPrice(row: Delivery)}
-    <Input
-        type="number"
-        value={row.price}
-        class="w-20"
-        onchange={(e) => {
-            let oldValue = row.price;
-            row.price = e.currentTarget.valueAsNumber;
-            editDelivery({
-                id: row.id,
-                price: row.price,
-            }).catch((e) => {
-                // Rollback
-                row.price = oldValue;
-            });
-        }}
-    />
 {/snippet}
 
 {#snippet updateDeliveryDate(row: Delivery)}
@@ -147,19 +154,29 @@
     onAddingRowClick={async (t) => {
         processing = true;
         let row = await addDelivery({});
-        deliveries = [...deliveries, { ...row, beerCount: 0 }];
+        deliveries = [
+            {
+                ...row,
+                beerCount: 0,
+                barrelCount: 0,
+                beerCost: 0,
+                barrelCost: 0,
+                theoreticalCost: 0,
+            },
+            ...deliveries,
+        ];
         processing = false;
     }}
     {menu}
 />
 
 <DeleteDialogMulti
-    name={(row: number) => `[zytho] ${deliveries[row]?.date}`}
+    name={(row: number) => `[livraison] ${formatDate(deliveries[row]?.date)}`}
     callback={(row: number) => {
         const tmp = deliveries[row];
         deliveries = deliveries.toSpliced(row, 1);
         deleteDelivery(tmp.id).catch((e) => {
-            errorCtx.message = `Erreur lors de la suppression de <pre>[biere] ${deliveries[row].name}</pre>`;
+            errorCtx.message = `Erreur lors de la suppression de <pre>[livraison] ${formatDate(tmp.date)}</pre>`;
         });
     }}
     bind:selectedItem

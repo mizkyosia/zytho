@@ -1,7 +1,7 @@
 import { db } from "#lib/server/db/index.js";
 import { zytho, zythoLine } from "#lib/server/db/schema.js";
-import { command, getRequestEvent, query } from "$app/server";
-import { error } from "@sveltejs/kit";
+import { requireAuth } from "#lib/server/auth.js";
+import { command, query } from "$app/server";
 import { eq, sql } from "drizzle-orm";
 import * as v from "valibot";
 
@@ -19,9 +19,7 @@ const zythoSchema = v.object({
 });
 
 export const getAll = query(async () => {
-  const { locals } = getRequestEvent();
-  if (!locals.authorized)
-    return error(401, { message: "Veuillez vous authentifier" });
+  requireAuth();
 
   const zythos = await db.select().from(zytho);
 
@@ -34,6 +32,7 @@ export const editZytho = command(
     ...zythoSchema.entries,
   }),
   async ({ id, ...row }) => {
+    requireAuth();
     await db.update(zytho).set(row).where(eq(zytho.id, id));
 
     return { success: true };
@@ -41,6 +40,7 @@ export const editZytho = command(
 );
 
 export const addZytho = command(zythoSchema, async (row) => {
+  requireAuth();
   let res = await db
     .insert(zytho)
     .values({
@@ -53,27 +53,27 @@ export const addZytho = command(zythoSchema, async (row) => {
 });
 
 export const deleteZytho = command(v.number(), async (id) => {
+  requireAuth();
   await db.delete(zytho).where(eq(zytho.id, id));
 
   return { success: true };
 });
 
 export const getDetails = query(v.number(), async (zythoId) => {
-  const { locals } = getRequestEvent();
-  if (!locals.authorized)
-    return error(401, { message: "Veuillez vous authentifier" });
+  requireAuth();
 
-  const zytho = await db.query.zytho.findFirst({
+  return await db.query.zytho.findFirst({
     where: {
       id: zythoId,
     },
-    with: {},
+    with: { lines: true },
   });
 });
 
 export const editZythoLine = command(
   zythoLineSchema,
   async ({ id, ...row }) => {
+    requireAuth();
     await db.update(zythoLine).set(row).where(eq(zythoLine.id, id));
 
     return { success: true };
@@ -82,19 +82,24 @@ export const editZythoLine = command(
 
 export const addZythoLine = command(
   v.object({
-    beerName: v.string(),
-    zythoId: v.number(),
-    countBefore: v.number(),
-    countAfter: v.number(),
+    beerId: v.optional(v.number()),
+    zythoId: v.optional(v.number()),
+    countBefore: v.optional(v.number()),
+    countAfter: v.optional(v.number()),
   }),
   async (row) => {
-    const res = await db.insert(zythoLine).values(row).returning();
+    requireAuth();
+    const res = await db
+      .insert(zythoLine)
+      .values({ countBefore: 0, countAfter: 0, ...row })
+      .returning();
 
     return res[0];
   },
 );
 
 export const deleteZythoLine = command(v.number(), async (id) => {
+  requireAuth();
   await db.delete(zythoLine).where(eq(zythoLine.id, id));
 
   return { success: true };

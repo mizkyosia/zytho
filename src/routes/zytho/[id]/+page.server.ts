@@ -19,9 +19,14 @@ export const load = async ({ params }) => {
 
   if (!zytho) return error(400, "ID inexistante");
 
+  const zythos = await db.query.zytho.findMany({
+    where: { NOT: { id } },
+    orderBy: { date: "desc" },
+  });
+
   const options = (
     await db.select({ value: beer.id, name: beer.name }).from(beer)
   ).map((o) => ({ value: o.value, name: o.name || "Sans nom" }));
 
-  return { zytho, options };
+  return { zytho, zythos, options };
 };

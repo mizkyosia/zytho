@@ -1,6 +1,6 @@
 import { getRequestEvent, form } from "$app/server";
 import * as v from "valibot";
-import { env } from '$env/dynamic/private';
+import { ADMIN_TOKEN } from "$app/env/private";
 import { invalid } from "@sveltejs/kit";
 
 export const login = form(
@@ -8,9 +8,9 @@ export const login = form(
   ({ token }, issue) => {
     const event = getRequestEvent();
 
-    if (env.ADMIN_TOKEN !== token) return invalid(issue.token("Mdp invalide"));
+    if (ADMIN_TOKEN !== token) return invalid(issue.token("Mdp invalide"));
 
-    event.cookies.set("adminToken", env.ADMIN_TOKEN, {
+    event.cookies.set("adminToken", ADMIN_TOKEN, {
       path: "/",
     });
   },

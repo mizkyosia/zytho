@@ -1,4 +1,7 @@
 import {
+ type CellData,
+ type RowData,
+ type TableFeatures,
  columnFilteringFeature,
  columnVisibilityFeature,
  createFilteredRowModel,
@@ -31,3 +34,14 @@ export const features = tableFeatures({
 // Pass this as the first generic argument to `ColumnDef`, `Column`, `Table`,
 // and `Row` so each type knows which feature APIs are available.
 export type DataTableFeatures = typeof features;
+
+declare module "@tanstack/svelte-table" {
+  interface ColumnMeta<
+    TFeatures extends TableFeatures,
+    TData extends RowData,
+    TValue extends CellData = CellData,
+  > {
+    /** Name shown in the column visibility menu */
+    label?: string;
+  }
+}

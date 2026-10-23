@@ -14,7 +14,7 @@
     const { path }: { path?: Path[] } = $props();
 </script>
 
-<Breadcrumb.Root class="absolute top-8 left-8">
+<Breadcrumb.Root class="mb-6">
     <Breadcrumb.List>
         <Breadcrumb.Item>
             <Breadcrumb.Link href="/"><House class="w-4" /></Breadcrumb.Link>

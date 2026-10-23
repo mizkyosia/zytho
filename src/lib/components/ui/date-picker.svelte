@@ -15,7 +15,7 @@
     import * as Popover from "./popover/index.js";
 
     interface Props {
-        value: DateValue;
+        value?: DateValue;
         onchange: (d: string) => void;
         icon?: boolean;
     }
@@ -39,7 +39,7 @@
                 {/if}
                 {value
                     ? df.format(value.toDate(getLocalTimeZone()))
-                    : "Select a date"}
+                    : "Choisir une date"}
             </Button>
         {/snippet}
     </Popover.Trigger>

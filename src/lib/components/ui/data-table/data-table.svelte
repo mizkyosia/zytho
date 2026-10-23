@@ -86,13 +86,13 @@
                         .getAllColumns()
                         .filter( (col) => col.getCanHide() ) as column (column.id)}
                         <DropdownMenu.CheckboxItem
-                            class="capitalize"
+                            class="first-letter:uppercase"
                             bind:checked={
                                 () => column.getIsVisible(),
                                 (v) => column.toggleVisibility(!!v)
                             }
                         >
-                            {column.id}
+                            {column.columnDef.meta?.label ?? column.id}
                         </DropdownMenu.CheckboxItem>
                     {/each}
                 </DropdownMenu.Content>
@@ -117,7 +117,7 @@
             </Table.Header>
             <Table.Body>
                 {#if table.getRowCount() > 0}
-                    {#each table.getRowModel().rows as row, i (row.id)}
+                    {#each table.getRowModel().rows as row (row.id)}
                         <ContextMenu.Root>
                             <ContextMenu.Trigger>
                                 {#snippet child({ props })}
@@ -136,7 +136,7 @@
                                         <ContextMenu.Content
                                             class="outline-none"
                                         >
-                                            {@render menu(i)}
+                                            {@render menu(row.index)}
                                         </ContextMenu.Content>
                                     {/if}
                                 {/snippet}

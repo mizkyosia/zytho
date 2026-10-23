@@ -14,9 +14,11 @@
 
     import * as Dialog from "#lib/components/ui/dialog/index.js";
     import { setContext } from "svelte";
+    import { page } from "$app/state";
+    import Header from "#lib/components/header.svelte";
     import { type ErrorContext } from "#lib/client.svelte.js";
 
-    const errorCtx: ErrorContext = $state({
+    const errorCtx = $state<ErrorContext>({
         set message(value: string | undefined) {
             this._innerMsg = value;
             this._show = !!value;
@@ -33,10 +35,16 @@
     let { children, data } = $props();
 </script>
 
-<div class="w-screen h-screen flex flex-col justify-center md:p-36">
-    {#if data.authorized}
-        {@render children()}
-    {:else}
+{#if data.authorized}
+    <Header />
+    <main class="mx-auto w-full max-w-6xl p-4 pb-16 md:px-8">
+        <!-- Pages copy their data into local state : remount them on navigation -->
+        {#key page.url.pathname}
+            {@render children()}
+        {/key}
+    </main>
+{:else}
+    <div class="w-full min-h-screen flex flex-col justify-center p-4">
         <Card.Root class="mx-auto w-full max-w-sm">
             <Card.Header>
                 <Card.Title class="text-2xl">Authentification</Card.Title>
@@ -74,8 +82,8 @@
                 </form>
             </Card.Content>
         </Card.Root>
-    {/if}
-</div>
+    </div>
+{/if}
 
 <Dialog.Root bind:open={errorCtx._show}>
     <Dialog.Content class="w-xs">

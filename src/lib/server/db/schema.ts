@@ -1,5 +1,6 @@
 import {
   pgTable,
+  pgEnum,
   serial,
   numeric,
   text,
@@ -11,8 +12,7 @@ export const beer = pgTable("Beer", {
   id: serial("id").primaryKey(),
   name: text("name"),
   buyingPrice: numeric("buyingPrice", { scale: 2, mode: "number" }).notNull(),
-  sellingPrice: numeric("sellingPrice", { scale: 2, mode: "number" }).notNull(),
-  alcohol: numeric("alcohol", { scale: 1 }).notNull(),
+  alcohol: numeric("alcohol", { scale: 1, mode: "number" }).notNull(),
 });
 
 export const delivery = pgTable("Delivery", {
@@ -54,11 +54,29 @@ export const zythoLine = pgTable("ZythoLine", {
   countAfter: integer("countAfter").notNull(),
 });
 
+export const barrelStatus = pgEnum("BarrelStatus", [
+  "closed",
+  "opened",
+  "emptied",
+]);
+
 export const barrel = pgTable("Barrel", {
   id: serial("id").primaryKey(),
-  beerName: text("name").notNull(),
+  name: text("name").notNull(),
+  alcohol: numeric("alcohol", { scale: 1, mode: "number" })
+    .notNull()
+    .default(0),
+  buyingPrice: numeric("buyingPrice", { scale: 2, mode: "number" })
+    .notNull()
+    .default(0),
+  status: barrelStatus("status").notNull().default("closed"),
   opened: date("opened"),
   deliveryId: integer("deliveryId").references(() => delivery.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  // Delivery during which the empty barrel was given back
+  returnDeliveryId: integer("returnDeliveryId").references(() => delivery.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),

@@ -14,6 +14,9 @@ export default defineConfig({
         experimental: { async: true },
       },
       adapter: adapter(),
+      // End-to-end tests run their own dev server on the test database : it
+      // needs its own generated files, which include the environment variables
+      outDir: process.env.SVELTEKIT_OUT_DIR ?? ".svelte-kit",
 
       // typescript: {
       //   config: (config) => {
