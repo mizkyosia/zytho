@@ -1,10 +1,27 @@
 services:
+  migrate:
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+      target: migrator
+    env_file: .env
+    container_name: zytho-migrate
+    restart: "no"
+    networks:
+      - zytho
+    depends_on:
+      db:
+        condition: service_healthy
+
   zytho:
     build:
       context: .
       dockerfile: prod.Dockerfile
     env_file: .env
     container_name: zytho
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     networks:
       - traefik-public
       - zytho

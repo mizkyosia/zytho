@@ -1,7 +1,15 @@
-FROM node:26-alpine AS builder
+FROM node:26-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+
+# One-shot image syncing the DB schema, run by the `migrate` service before the app starts
+FROM deps AS migrator
+COPY drizzle.config.ts ./
+COPY src/lib/server/db/schema.ts src/lib/server/db/
+CMD [ "npx", "drizzle-kit", "push", "--force" ]
+
+FROM deps AS builder
 COPY . .
 RUN npm run build
 RUN npm prune --production
